@@ -1,0 +1,123 @@
+Rahul, a software engineer, is developing a file indexing feature for an operating system like Microsoft Windows. Instead of scanning all folders every time,
+Rahul designs a system that stores file IDs (or sizes) in an organized hierarchical structure of connected nodes. This helps in: Fast insertion when a new file is
+added, Fast deletion when a file is removed. To ensure data is not lost after restarting the system, Rahul stores the file index in a disk file. He is using a 
+program based on a node-based hierarchical structure. Smaller IDs → go to the left Larger IDs → go to the right This helps users quickly search for places and update
+map data efficiently. Input Format an integer number, number of nodes n 1 2 3 ... n Node to be inseted in a tree. Node to be deleted. Constraints General Constraints
+1 ≤ n ≤ 100 → Number of nodes (files/locations) 1 ≤ q ≤ 50 → Number of operations Node names / IDs are unique Maximum tree depth ≤ 20 Output Format Current 
+File Index sorted in ascending order. 
+Sample Input 0 3 10 20 30 40 10
+Sample Output 0 
+Current File Index sorted in ascending order: 20 30 40 
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Define structure
+struct Node {
+    int data;
+    struct Node *left, *right;
+};
+
+// Create new node
+struct Node* createNode(int data) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = data;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+// Insert into BST
+struct Node* insert(struct Node* root, int data) {
+    if (root == NULL)
+        return createNode(data);
+
+    if (data < root->data)
+        root->left = insert(root->left, data);
+    else if (data > root->data)
+        root->right = insert(root->right, data);
+
+    return root;
+}
+
+// Find minimum node (used in deletion)
+struct Node* findMin(struct Node* root) {
+    while (root->left != NULL)
+        root = root->left;
+    return root;
+}
+
+// Delete node
+struct Node* deleteNode(struct Node* root, int key) {
+    if (root == NULL)
+        return NULL;
+
+    if (key < root->data)
+        root->left = deleteNode(root->left, key);
+    else if (key > root->data)
+        root->right = deleteNode(root->right, key);
+    else {
+        // Node found
+
+        // Case 1: No child
+        if (root->left == NULL && root->right == NULL) {
+            free(root);
+            return NULL;
+        }
+
+        // Case 2: One child
+        else if (root->left == NULL) {
+            struct Node* temp = root->right;
+            free(root);
+            return temp;
+        }
+        else if (root->right == NULL) {
+            struct Node* temp = root->left;
+            free(root);
+            return temp;
+        }
+
+        // Case 3: Two children
+        struct Node* temp = findMin(root->right);
+        root->data = temp->data;
+        root->right = deleteNode(root->right, temp->data);
+    }
+    return root;
+}
+
+// Inorder traversal (sorted output)
+void inorder(struct Node* root) {
+    if (root != NULL) {
+        inorder(root->left);
+        printf("%d ", root->data);
+        inorder(root->right);
+    }
+}
+
+int main() {
+    int n, i, val, insertVal, deleteVal;
+    struct Node* root = NULL;
+
+    // Input number of nodes
+    scanf("%d", &n);
+
+    // Insert initial nodes
+    for (i = 0; i < n; i++) {
+        scanf("%d", &val);
+        root = insert(root, val);
+    }
+
+    // Insert new node
+    scanf("%d", &insertVal);
+    root = insert(root, insertVal);
+
+    // Delete node
+    scanf("%d", &deleteVal);
+    root = deleteNode(root, deleteVal);
+
+    // Output sorted result
+    printf("Current File Index sorted in ascending order: ");
+    inorder(root);
+
+    return 0;
+}
